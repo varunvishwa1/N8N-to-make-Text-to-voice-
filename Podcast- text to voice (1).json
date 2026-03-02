@@ -1,0 +1,218 @@
+{
+  "name": "Podcast- text to voice",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=You are a professional podcast script writer.\n\nWrite a conversational and engaging podcast script on the topic:{{$json.body.text}} .\n\nKeep it around 2 minutes when spoken.\n\nUse a friendly and informative tone, as if talking directly to listeners.\n\nAvoid any headings, labels, or formatting. Output plain text only."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -1456,
+        464
+      ],
+      "id": "7f7c1a5a-9bad-43fd-a446-68f47d5347c9",
+      "name": "Podcast script"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -1392,
+        688
+      ],
+      "id": "0bcdaf9f-e430-46ee-815f-f8dd65782999",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "gA99QKiQJGcIB7OS",
+          "name": "Google Gemini(PaLM) Api account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://global.api.murf.ai/v1/speech/stream",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api-key",
+              "value": "ap2_c2f17485-af86-4f5b-b837-f5ffc1951a3a"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "text",
+              "value": "={{ $json.text }}"
+            },
+            {
+              "name": "voiceId",
+              "value": "{\"voice_id\":\"Matthew\",\"style\":\"Conversation\",\"model:\":\"Falcon\"}"
+            },
+            {
+              "name": "multiNativeLocale",
+              "value": "en-US"
+            },
+            {
+              "name": "model",
+              "value": "FALCON"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1104,
+        464
+      ],
+      "id": "f3a21a70-d2fd-489c-b772-324cda022a3c",
+      "name": "Murf API"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "c69b98fb-e013-4e50-97d7-66daf25b2229",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1424,
+        1024
+      ],
+      "id": "459ba3c5-65b0-4359-a0a1-b03a958822a6",
+      "name": "Webhook",
+      "webhookId": "c69b98fb-e013-4e50-97d7-66daf25b2229"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -1680,
+        1024
+      ],
+      "id": "201c60b5-e832-4223-8813-fc25bdb23333",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -880,
+        464
+      ],
+      "id": "71dba66d-5ee7-43a0-a40d-6a68646c61bb",
+      "name": "Podcast Downloder"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -1680,
+        464
+      ],
+      "id": "ac489500-1e67-40f8-a778-2fb2c6ced46f",
+      "name": "When chat message received",
+      "webhookId": "128a7707-95d6-48f3-9052-acb8f158a81d"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Podcast script",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Podcast script": {
+      "main": [
+        [
+          {
+            "node": "Murf API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        []
+      ]
+    },
+    "Murf API": {
+      "main": [
+        [
+          {
+            "node": "Podcast Downloder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Podcast script",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Podcast Downloder": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "151d2573-09b2-442a-bc96-3f64c9353bc8",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "5a42fec59a735878a0d4ef0bbe4a1d924ba227ee9ad66127341600540f283118"
+  },
+  "id": "QkQIIHxJ8Efk78Qd",
+  "tags": []
+}
